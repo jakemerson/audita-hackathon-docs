@@ -4,7 +4,7 @@
 
 - **Projeto:** Audita
 - **Fase atual:** 06 — Qualidade e validação visual
-- **Plano atual:** aguardando execução
+- **Plano atual:** 06-02 — validação visual pelo browser subagent
 - **Modo:** YOLO, execução sequencial, commits atômicos
 - **Progresso:** 5/6 fases (`█████░`)
 
@@ -21,7 +21,7 @@
 
 ## Próxima ação
 
-Executar `06-PLAN.md`; validação browser ficará para o browser subagent.
+Validar a jornada em `http://127.0.0.1:8000` pelo browser subagent; depois fechar 06-03.
 
 ## Riscos acompanhados
 
@@ -38,3 +38,4 @@ Executar `06-PLAN.md`; validação browser ficará para o browser subagent.
 - 2026-08-19 — Fase 03 concluída com API e exportações protegidas.
 - 2026-08-19 — Fase 04 concluída com jornada acessível e UI premium.
 - 2026-08-19 — Fase 05 concluída com demo exata, runner e pitch.
+- 2026-08-19 — QA automatizado da fase 06 aprovado: 41/41 testes, Python e JavaScript válidos.
