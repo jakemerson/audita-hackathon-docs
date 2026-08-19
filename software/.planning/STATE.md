@@ -3,10 +3,10 @@
 ## Status atual
 
 - **Projeto:** Audita
-- **Fase atual:** 01 — Ambiente, motor tributário e parser XML
+- **Fase atual:** 02 — Auditor OpenAI, Copilot e relatórios
 - **Plano atual:** aguardando execução
 - **Modo:** YOLO, execução sequencial, commits atômicos
-- **Progresso:** 0/6 fases
+- **Progresso:** 1/6 fases (`█░░░░░`)
 
 ## Decisões fixadas
 
@@ -21,7 +21,7 @@
 
 ## Próxima ação
 
-Executar `01-PLAN.md` via agente GSD executor.
+Executar `02-PLAN.md` via agente GSD executor.
 
 ## Riscos acompanhados
 
@@ -33,3 +33,4 @@ Executar `01-PLAN.md` via agente GSD executor.
 ## Histórico
 
 - 2026-08-19 — Planejamento iniciado a partir dos documentos jurídicos/econômicos atualizados.
+- 2026-08-19 — Fase 01 concluída com 16 testes verdes no core.
