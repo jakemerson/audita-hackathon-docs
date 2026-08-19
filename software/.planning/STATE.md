@@ -3,10 +3,10 @@
 ## Status atual
 
 - **Projeto:** Audita
-- **Fase atual:** 04 — Frontend SPA premium
+- **Fase atual:** 05 — Dataset, execução e pitch
 - **Plano atual:** aguardando execução
 - **Modo:** YOLO, execução sequencial, commits atômicos
-- **Progresso:** 3/6 fases (`███░░░`)
+- **Progresso:** 4/6 fases (`████░░`)
 
 ## Decisões fixadas
 
@@ -21,7 +21,7 @@
 
 ## Próxima ação
 
-Executar `04-PLAN.md` via agente GSD executor.
+Executar `05-PLAN.md` via agente GSD executor.
 
 ## Riscos acompanhados
 
@@ -36,3 +36,4 @@ Executar `04-PLAN.md` via agente GSD executor.
 - 2026-08-19 — Fase 01 concluída com 16 testes verdes no core.
 - 2026-08-19 — Fase 02 concluída com fallback de IA e relatórios verificados.
 - 2026-08-19 — Fase 03 concluída com API e exportações protegidas.
+- 2026-08-19 — Fase 04 concluída com jornada acessível e UI premium.
