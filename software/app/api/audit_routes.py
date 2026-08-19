@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from app.core.nfe_parser import NFeParseError, audit_xml_batch
 from app.models.nfe_models import AuditContext, AuditSummary
+from app.services.copilot_service import ask_copilot
 from app.services.openai_auditor import generate_audit_opinion
 from app.services.session_config import key_store
 
@@ -21,6 +22,11 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 MAX_SINGLE_FILE_BYTES = 10 * 1024 * 1024
 MAX_XML_FILES = 30
 MAX_COMPRESSION_RATIO = 100
+SAMPLE_DIR = Path(__file__).resolve().parents[2] / "sample_invoices"
+
+
+class CopilotRequest(BaseModel):
+    question: str = Field(min_length=2, max_length=2000)
 
 
 def _safe_zip_xmls(name: str, content: bytes) -> list[tuple[str, bytes]]:
@@ -120,3 +126,21 @@ async def upload_audit(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return _response(summary)
 
+
+@router.post("/audit/demo-oficina")
+def demo_workshop():
+    files = [(path.name, path.read_bytes()) for path in sorted(SAMPLE_DIR.glob("oficina_*.xml"))]
+    if len(files) != 5:
+        raise HTTPException(status_code=503, detail="Fixtures da demonstração ainda não estão disponíveis.")
+    try:
+        summary = audit_xml_batch(files, AuditContext(rbt12="1800000", pgdas_segregated=False, period="2026-08"))
+    except NFeParseError as exc:
+        raise HTTPException(status_code=500, detail="Fixture sintética inválida.") from exc
+    if summary.estimated_overpayment != 1840:
+        raise HTTPException(status_code=500, detail="Cenário de demonstração perdeu a calibração.")
+    return _response(summary)
+
+
+@router.post("/audit/copilot")
+def copilot(payload: CopilotRequest):
+    return ask_copilot(payload.question, key_store.get()).model_dump(mode="json")
