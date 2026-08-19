@@ -21,10 +21,9 @@ from app.services.session_config import key_store
 
 router = APIRouter(prefix="/api", tags=["auditoria"])
 
-MAX_UPLOAD_MB = 100
-MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 MAX_SINGLE_FILE_BYTES = 10 * 1024 * 1024
-MAX_XML_FILES = 500
+MAX_XML_FILES = 30
 MAX_COMPRESSION_RATIO = 100
 SAMPLE_DIR = Path(__file__).resolve().parents[2] / "sample_invoices"
 
@@ -46,7 +45,7 @@ def _safe_zip_xmls(name: str, content: bytes) -> list[tuple[str, bytes]]:
         with ZipFile(BytesIO(content)) as archive:
             members = archive.infolist()
             if len(members) > MAX_XML_FILES:
-                raise HTTPException(status_code=400, detail=f"ZIP excede o limite de {MAX_XML_FILES} membros.")
+                raise HTTPException(status_code=400, detail="ZIP excede o limite de 30 membros.")
             for info in members:
                 path = PurePosixPath(info.filename.replace("\\", "/"))
                 if info.is_dir():
@@ -63,7 +62,7 @@ def _safe_zip_xmls(name: str, content: bytes) -> list[tuple[str, bytes]]:
                     raise HTTPException(status_code=400, detail="Possível ZIP bomb detectado.")
                 total += info.file_size
                 if total > MAX_UPLOAD_BYTES:
-                    raise HTTPException(status_code=413, detail=f"Conteúdo descompactado excede {MAX_UPLOAD_MB} MB.")
+                    raise HTTPException(status_code=413, detail="Conteúdo descompactado excede 25 MB.")
                 extracted.append((path.name, archive.read(info)))
     except BadZipFile as exc:
         raise HTTPException(status_code=400, detail=f"{name}: ZIP inválido.") from exc
@@ -74,7 +73,7 @@ def _safe_zip_xmls(name: str, content: bytes) -> list[tuple[str, bytes]]:
 
 async def _collect_uploads(files: list[UploadFile]) -> list[tuple[str, bytes]]:
     if not files or len(files) > MAX_XML_FILES:
-        raise HTTPException(status_code=400, detail=f"Envie entre 1 e {MAX_XML_FILES} arquivos XML/ZIP.")
+        raise HTTPException(status_code=400, detail="Envie entre 1 e 30 arquivos XML/ZIP.")
     xml_files: list[tuple[str, bytes]] = []
     total = 0
     for upload in files:
@@ -85,7 +84,7 @@ async def _collect_uploads(files: list[UploadFile]) -> list[tuple[str, bytes]]:
         content = await upload.read(MAX_UPLOAD_BYTES + 1)
         total += len(content)
         if total > MAX_UPLOAD_BYTES:
-            raise HTTPException(status_code=413, detail=f"Lote excede o limite de {MAX_UPLOAD_MB} MB.")
+            raise HTTPException(status_code=413, detail="Lote excede o limite de 25 MB.")
         if suffix == ".xml":
             if len(content) > MAX_SINGLE_FILE_BYTES:
                 raise HTTPException(status_code=413, detail=f"{filename}: XML excede 10 MB.")
@@ -93,7 +92,7 @@ async def _collect_uploads(files: list[UploadFile]) -> list[tuple[str, bytes]]:
         else:
             xml_files.extend(_safe_zip_xmls(filename, content))
         if len(xml_files) > MAX_XML_FILES:
-            raise HTTPException(status_code=400, detail=f"Lote excede {MAX_XML_FILES} XMLs.")
+            raise HTTPException(status_code=400, detail="Lote excede 30 XMLs.")
     return xml_files
 
 

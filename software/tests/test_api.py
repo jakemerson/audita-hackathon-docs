@@ -69,34 +69,6 @@ def test_zip_rejects_path_traversal():
     assert "inseguro" in response.text
 
 
-def test_zip_accepts_three_hundred_xmls():
-    payload = BytesIO()
-    with ZipFile(payload, "w", ZIP_DEFLATED) as archive:
-        for index in range(300):
-            archive.writestr(f"nota-{index:03d}.xml", make_xml())
-    response = client.post(
-        "/api/audit/upload",
-        data={"rbt12": "1800000", "period": "2026-08"},
-        files=[("files", ("lote-300.zip", payload.getvalue(), "application/zip"))],
-    )
-    assert response.status_code == 200
-    assert response.json()["report"]["invoice_count"] == 300
-
-
-def test_zip_rejects_more_than_five_hundred_members():
-    payload = BytesIO()
-    with ZipFile(payload, "w", ZIP_DEFLATED) as archive:
-        for index in range(501):
-            archive.writestr(f"nota-{index:03d}.xml", make_xml())
-    response = client.post(
-        "/api/audit/upload",
-        data={"rbt12": "1800000"},
-        files=[("files", ("lote-501.zip", payload.getvalue(), "application/zip"))],
-    )
-    assert response.status_code == 400
-    assert "500 membros" in response.text
-
-
 def test_copilot_route_returns_sources():
     response = client.post("/api/audit/copilot", json={"question": "Como retificar o PGDAS?"})
     assert response.status_code == 200

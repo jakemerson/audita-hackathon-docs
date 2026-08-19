@@ -101,7 +101,7 @@ O catálogo é propositalmente apresentado como subconjunto operacional, nunca c
 | `POST` | `/api/export/excel` | workbook com memória e fórmulas |
 | `POST` | `/api/export/pdf` | memória de cálculo/checklist |
 
-Limites do upload: 500 XMLs, 100 MB por lote, 10 MB por XML e proteção contra path traversal/ZIP bomb.
+Limites do upload: 30 XMLs, 25 MB por lote, 10 MB por XML e proteção contra path traversal/ZIP bomb.
 
 ## Privacidade e segurança
 
