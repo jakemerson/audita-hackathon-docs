@@ -1,0 +1,13 @@
+{
+  "mode": "yolo",
+  "depth": "standard",
+  "parallelization": false,
+  "commit_docs": true,
+  "model_profile": "quality",
+  "workflow": {
+    "research": false,
+    "plan_check": true,
+    "verification": true,
+    "atomic_commits": true
+  }
+}
