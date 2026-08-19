@@ -302,6 +302,159 @@ function initEvidence() {
   $("#statusFilter").addEventListener("change", renderFindings);
 }
 
+function openDrawer() {
+  Audita.lastFocused = document.activeElement;
+  const drawer = $("#copilotDrawer");
+  drawer.classList.add("is-open");
+  drawer.setAttribute("aria-hidden", "false");
+  $("#drawerBackdrop").hidden = false;
+  $("#openCopilot").setAttribute("aria-expanded", "true");
+  window.setTimeout(() => $("#copilotInput").focus(), 30);
+}
+
+function closeDrawer() {
+  const drawer = $("#copilotDrawer");
+  drawer.classList.remove("is-open");
+  drawer.setAttribute("aria-hidden", "true");
+  $("#drawerBackdrop").hidden = true;
+  $("#openCopilot").setAttribute("aria-expanded", "false");
+  Audita.lastFocused?.focus();
+}
+
+function appendCopilotMessage(kind, text, sources = []) {
+  const wrapper = document.createElement("div");
+  wrapper.className = kind === "user" ? "user-message" : "assistant-message";
+  const paragraph = document.createElement("p");
+  paragraph.textContent = text;
+  wrapper.append(paragraph);
+  if (sources.length) {
+    const list = document.createElement("div");
+    list.className = "source-list";
+    const prefix = document.createElement("strong");
+    prefix.textContent = "Fontes: ";
+    list.append(prefix);
+    sources.slice(0, 4).forEach((source, index) => {
+      const link = document.createElement("a");
+      link.href = source.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = source.title;
+      list.append(link);
+      if (index < Math.min(sources.length, 4) - 1) list.append(document.createTextNode(" · "));
+    });
+    wrapper.append(list);
+  }
+  $("#copilotMessages").append(wrapper);
+  wrapper.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth", block: "end" });
+  return wrapper;
+}
+
+async function sendCopilot(question) {
+  const trimmed = question.trim();
+  if (trimmed.length < 2) return;
+  appendCopilotMessage("user", trimmed);
+  const pending = appendCopilotMessage("assistant", "Consultando regras e fontes...");
+  $("#copilotInput").value = "";
+  try {
+    const response = await api("/api/audit/copilot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: trimmed }),
+    });
+    const reply = await response.json();
+    pending.remove();
+    appendCopilotMessage("assistant", `${reply.answer}\n\nPróximo passo: ${reply.next_step}`, reply.sources);
+  } catch (error) {
+    pending.remove();
+    appendCopilotMessage("assistant", `Não consegui responder agora. ${error.message}`);
+  }
+}
+
+async function downloadReport(kind) {
+  if (!Audita.report) {
+    toast("Execute uma auditoria antes de exportar.", true);
+    return;
+  }
+  const button = kind === "excel" ? $("#downloadExcel") : $("#downloadPdf");
+  button.disabled = true;
+  try {
+    const response = await api(`/api/export/${kind}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report: Audita.report }),
+    });
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = kind === "excel" ? "audita-memoria-calculo.xlsx" : "audita-memoria-checklist.pdf";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    toast(`${kind === "excel" ? "Excel" : "PDF"} gerado para validação do contador.`);
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function initCopilotAndReports() {
+  $("#openCopilot").addEventListener("click", openDrawer);
+  $("#closeCopilot").addEventListener("click", closeDrawer);
+  $("#drawerBackdrop").addEventListener("click", closeDrawer);
+  $("#copilotForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    sendCopilot($("#copilotInput").value);
+  });
+  $$(".quick-questions button").forEach((button) => button.addEventListener("click", () => sendCopilot(button.textContent)));
+  $("#copilotDrawer").addEventListener("keydown", (event) => {
+    if (event.key === "Escape") { closeDrawer(); return; }
+    if (event.key !== "Tab") return;
+    const focusable = $$("#copilotDrawer button, #copilotDrawer textarea, #copilotDrawer a").filter((node) => !node.disabled);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
+  $("#downloadExcel").addEventListener("click", () => downloadReport("excel"));
+  $("#downloadPdf").addEventListener("click", () => downloadReport("pdf"));
+
+  const modal = $("#keyModal");
+  $("#openKeyModal").addEventListener("click", () => {
+    Audita.lastFocused = document.activeElement;
+    modal.showModal();
+    window.setTimeout(() => $("#apiKey").focus(), 20);
+  });
+  modal.addEventListener("close", () => Audita.lastFocused?.focus());
+  $("#toggleKey").addEventListener("click", () => {
+    const input = $("#apiKey");
+    input.type = input.type === "password" ? "text" : "password";
+  });
+  $("#keyForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (event.submitter?.value === "cancel") { modal.close(); return; }
+    const value = $("#apiKey").value;
+    try {
+      const response = await api("/api/config/set-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: value }),
+      });
+      const result = await response.json();
+      $("#apiKey").value = "";
+      $("#apiKey").type = "password";
+      modal.close();
+      await loadHealth();
+      toast(result.message);
+    } catch (error) {
+      toast(error.message, true);
+    }
+  });
+}
+
 async function loadHealth() {
   try {
     const response = await api("/api/health");
@@ -334,5 +487,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.lucide) window.lucide.createIcons();
   initIntake();
   initEvidence();
+  initCopilotAndReports();
   loadHealth();
 });
