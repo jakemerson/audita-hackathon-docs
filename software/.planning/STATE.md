@@ -3,10 +3,10 @@
 ## Status atual
 
 - **Projeto:** Audita
-- **Fase atual:** 02 — Auditor OpenAI, Copilot e relatórios
+- **Fase atual:** 03 — API REST FastAPI
 - **Plano atual:** aguardando execução
 - **Modo:** YOLO, execução sequencial, commits atômicos
-- **Progresso:** 1/6 fases (`█░░░░░`)
+- **Progresso:** 2/6 fases (`██░░░░`)
 
 ## Decisões fixadas
 
@@ -21,7 +21,7 @@
 
 ## Próxima ação
 
-Executar `02-PLAN.md` via agente GSD executor.
+Executar `03-PLAN.md` via agente GSD executor.
 
 ## Riscos acompanhados
 
@@ -34,3 +34,4 @@ Executar `02-PLAN.md` via agente GSD executor.
 
 - 2026-08-19 — Planejamento iniciado a partir dos documentos jurídicos/econômicos atualizados.
 - 2026-08-19 — Fase 01 concluída com 16 testes verdes no core.
+- 2026-08-19 — Fase 02 concluída com fallback de IA e relatórios verificados.
