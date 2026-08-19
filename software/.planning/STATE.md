@@ -3,10 +3,10 @@
 ## Status atual
 
 - **Projeto:** Audita
-- **Fase atual:** 05 — Dataset, execução e pitch
+- **Fase atual:** 06 — Qualidade e validação visual
 - **Plano atual:** aguardando execução
 - **Modo:** YOLO, execução sequencial, commits atômicos
-- **Progresso:** 4/6 fases (`████░░`)
+- **Progresso:** 5/6 fases (`█████░`)
 
 ## Decisões fixadas
 
@@ -21,7 +21,7 @@
 
 ## Próxima ação
 
-Executar `05-PLAN.md` via agente GSD executor.
+Executar `06-PLAN.md`; validação browser ficará para o browser subagent.
 
 ## Riscos acompanhados
 
@@ -37,3 +37,4 @@ Executar `05-PLAN.md` via agente GSD executor.
 - 2026-08-19 — Fase 02 concluída com fallback de IA e relatórios verificados.
 - 2026-08-19 — Fase 03 concluída com API e exportações protegidas.
 - 2026-08-19 — Fase 04 concluída com jornada acessível e UI premium.
+- 2026-08-19 — Fase 05 concluída com demo exata, runner e pitch.
