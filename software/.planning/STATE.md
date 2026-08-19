@@ -3,10 +3,10 @@
 ## Status atual
 
 - **Projeto:** Audita
-- **Fase atual:** 06 — Qualidade e validação visual
-- **Plano atual:** 06-02 — validação visual pelo browser subagent
+- **Fase atual:** marco MVP concluído
+- **Plano atual:** nenhuma tarefa pendente
 - **Modo:** YOLO, execução sequencial, commits atômicos
-- **Progresso:** 5/6 fases (`█████░`)
+- **Progresso:** 6/6 fases (`██████`)
 
 ## Decisões fixadas
 
@@ -21,7 +21,7 @@
 
 ## Próxima ação
 
-Validar a jornada em `http://127.0.0.1:8000` pelo browser subagent; depois fechar 06-03.
+Executar `./run.sh` e ensaiar `PITCH_HACKATHON.md` antes da apresentação.
 
 ## Riscos acompanhados
 
@@ -39,3 +39,5 @@ Validar a jornada em `http://127.0.0.1:8000` pelo browser subagent; depois fecha
 - 2026-08-19 — Fase 04 concluída com jornada acessível e UI premium.
 - 2026-08-19 — Fase 05 concluída com demo exata, runner e pitch.
 - 2026-08-19 — QA automatizado da fase 06 aprovado: 41/41 testes, Python e JavaScript válidos.
+- 2026-08-19 — Browser subagent aprovou desktop e mobile após corrigir Escape do modal, overflow responsivo e nome acessível.
+- 2026-08-19 — Marco MVP concluído: requisitos rastreados, 41/41 testes verdes e demo calibrada em R$ 1.840,00.
