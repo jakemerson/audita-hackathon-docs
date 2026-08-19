@@ -26,6 +26,7 @@ def test_dropzone_and_dialog_are_keyboard_discoverable():
     assert dropzone.get("role") == "button"
     assert dropzone.get("tabindex") == "0"
     assert document.get_element_by_id("keyModal").tag == "dialog"
+    assert document.get_element_by_id("openKeyModal").get("aria-label") == "Configurar OpenAI"
     assert document.get_element_by_id("closeCopilot").get("aria-label")
 
 
@@ -44,6 +45,8 @@ def test_styles_cover_focus_responsiveness_and_reduced_motion():
     assert "prefers-reduced-motion" in styles
     assert "@media(max-width:620px)" in styles
     assert "overflow-x:hidden" in styles
+    assert ".evidence-grid>*{min-width:0}" in styles
+    assert ".evidence-grid{grid-template-columns:minmax(0,1fr)}" in styles
 
 
 def test_javascript_binds_critical_controls_and_avoids_inner_html():
@@ -52,6 +55,9 @@ def test_javascript_binds_critical_controls_and_avoids_inner_html():
         assert selector in script
     assert ".innerHTML" not in script
     assert "prefers-reduced-motion" in script
+    assert 'modal.addEventListener("cancel"' in script
+    assert 'modal.addEventListener("keydown"' in script
+    assert 'event.key !== "Escape"' in script
 
 
 def test_copy_uses_audita_and_responsible_estimate_language():

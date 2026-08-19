@@ -423,19 +423,31 @@ function initCopilotAndReports() {
   $("#downloadPdf").addEventListener("click", () => downloadReport("pdf"));
 
   const modal = $("#keyModal");
+  const closeKeyModal = () => {
+    if (modal.open) modal.close();
+  };
   $("#openKeyModal").addEventListener("click", () => {
     Audita.lastFocused = document.activeElement;
     modal.showModal();
     window.setTimeout(() => $("#apiKey").focus(), 20);
   });
   modal.addEventListener("close", () => Audita.lastFocused?.focus());
+  modal.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeKeyModal();
+  });
+  modal.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    closeKeyModal();
+  });
   $("#toggleKey").addEventListener("click", () => {
     const input = $("#apiKey");
     input.type = input.type === "password" ? "text" : "password";
   });
   $("#keyForm").addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (event.submitter?.value === "cancel") { modal.close(); return; }
+    if (event.submitter?.value === "cancel") { closeKeyModal(); return; }
     const value = $("#apiKey").value;
     try {
       const response = await api("/api/config/set-key", {
@@ -446,7 +458,7 @@ function initCopilotAndReports() {
       const result = await response.json();
       $("#apiKey").value = "";
       $("#apiKey").type = "password";
-      modal.close();
+      closeKeyModal();
       await loadHealth();
       toast(result.message);
     } catch (error) {
