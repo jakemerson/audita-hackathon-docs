@@ -8,12 +8,15 @@ import re
 from zipfile import BadZipFile, ZipFile, is_zipfile
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, ValidationError
 
 from app.core.nfe_parser import NFeParseError, audit_xml_batch
 from app.models.nfe_models import AuditContext, AuditSummary
 from app.services.copilot_service import ask_copilot
+from app.services.excel_generator import generate_excel
 from app.services.openai_auditor import generate_audit_opinion
+from app.services.pdf_generator import generate_pdf
 from app.services.session_config import key_store
 
 router = APIRouter(prefix="/api", tags=["auditoria"])
@@ -27,6 +30,10 @@ SAMPLE_DIR = Path(__file__).resolve().parents[2] / "sample_invoices"
 
 class CopilotRequest(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
+
+
+class ExportRequest(BaseModel):
+    report: AuditSummary
 
 
 def _safe_zip_xmls(name: str, content: bytes) -> list[tuple[str, bytes]]:
@@ -144,3 +151,23 @@ def demo_workshop():
 @router.post("/audit/copilot")
 def copilot(payload: CopilotRequest):
     return ask_copilot(payload.question, key_store.get()).model_dump(mode="json")
+
+
+@router.post("/export/excel")
+def export_excel(payload: ExportRequest):
+    content = generate_excel(payload.report)
+    return StreamingResponse(
+        BytesIO(content),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="audita-memoria-calculo.xlsx"'},
+    )
+
+
+@router.post("/export/pdf")
+def export_pdf(payload: ExportRequest):
+    content = generate_pdf(payload.report)
+    return StreamingResponse(
+        BytesIO(content),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="audita-memoria-checklist.pdf"'},
+    )
