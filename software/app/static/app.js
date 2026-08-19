@@ -166,7 +166,140 @@ function renderOpinion() {
 }
 
 function renderEvidence() {
-  /* Complementado pelos componentes de evidência da próxima etapa. */
+  if (!Audita.report) return;
+  renderChart();
+  renderFindings();
+}
+
+function renderChart() {
+  const totals = Audita.report.findings.reduce((segments, finding) => {
+    const amount = asNumber(finding.estimated_overpayment);
+    if (amount > 0) segments[finding.segment] = (segments[finding.segment] || 0) + amount;
+    return segments;
+  }, {});
+  const labels = Object.keys(totals);
+  const values = Object.values(totals);
+  const fallback = $("#chartFallback");
+  fallback.replaceChildren();
+  const grandTotal = values.reduce((total, value) => total + value, 0) || 1;
+  labels.forEach((label, index) => {
+    const row = document.createElement("div");
+    row.className = "fallback-row";
+    const name = document.createElement("span");
+    name.textContent = label;
+    const value = document.createElement("strong");
+    value.textContent = brl(values[index]);
+    const bar = document.createElement("span");
+    bar.className = "fallback-bar";
+    const fill = document.createElement("span");
+    fill.style.width = `${Math.max((values[index] / grandTotal) * 100, 2)}%`;
+    bar.append(fill);
+    row.append(name, value, bar);
+    fallback.append(row);
+  });
+  const canvas = $("#segmentChart");
+  if (typeof window.Chart !== "function" || !labels.length) {
+    canvas.hidden = true;
+    fallback.hidden = false;
+    return;
+  }
+  fallback.hidden = true;
+  canvas.hidden = false;
+  if (Audita.chart) Audita.chart.destroy();
+  Audita.chart = new window.Chart(canvas, {
+    type: "doughnut",
+    data: { labels, datasets: [{ data: values, backgroundColor: ["#22c55e", "#818cf8", "#38bdf8", "#fbbf24", "#f472b6"], borderColor: "#0f172a", borderWidth: 4, hoverOffset: 6 }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "68%",
+      animation: reduceMotion() ? false : { duration: 600 },
+      plugins: {
+        legend: { position: "bottom", labels: { color: "#cbd5e1", boxWidth: 9, boxHeight: 9, usePointStyle: true, padding: 18, font: { family: "IBM Plex Sans" } } },
+        tooltip: { callbacks: { label: (context) => `${context.label}: ${brl(context.raw)}` } },
+      },
+    },
+  });
+}
+
+function statusLabel(status) {
+  return { CONFIRMADO: "Confirmado", REVISAR: "Revisar", NAO_ENQUADRADO: "Não enquadrado" }[status] || status;
+}
+
+function addTextCell(row, main, detail = "") {
+  const cell = row.insertCell();
+  const strong = document.createElement("strong");
+  strong.textContent = main;
+  cell.append(strong);
+  if (detail) {
+    const small = document.createElement("small");
+    small.textContent = detail;
+    cell.append(small);
+  }
+  return cell;
+}
+
+function renderFindings() {
+  const query = $("#itemSearch").value.trim().toLocaleLowerCase("pt-BR");
+  const status = $("#statusFilter").value;
+  const body = $("#findingsBody");
+  body.replaceChildren();
+  const findings = Audita.report.findings.filter((finding) => {
+    const haystack = `${finding.description} ${finding.ncm} ${finding.invoice_number}`.toLocaleLowerCase("pt-BR");
+    return (!query || haystack.includes(query)) && (status === "ALL" || finding.status === status);
+  });
+  findings.forEach((finding) => {
+    const row = body.insertRow();
+    addTextCell(row, finding.description, `Nota ${finding.invoice_number} · item ${finding.item_number}`);
+    addTextCell(row, `NCM ${finding.ncm}`, `CFOP ${finding.cfop || "não informado"}`);
+    addTextCell(row, `PIS ${finding.pis_cst || "—"} · Cofins ${finding.cofins_cst || "—"}`, `CSOSN ${finding.csosn || "—"} (ICMS, separado)`);
+    const evidenceCell = row.insertCell();
+    if (finding.evidence) {
+      const link = document.createElement("a");
+      link.className = "rule-link";
+      link.href = finding.evidence.legal_url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = finding.evidence.legal_source;
+      const reason = document.createElement("small");
+      reason.textContent = finding.evidence.reason;
+      evidenceCell.append(link, reason);
+    } else {
+      evidenceCell.textContent = "Sem correspondência no catálogo MVP";
+    }
+    if (finding.pending_checks?.length) {
+      const pending = document.createElement("small");
+      pending.textContent = `Pendente: ${finding.pending_checks.join(" ")}`;
+      evidenceCell.append(pending);
+    }
+    const statusCell = row.insertCell();
+    const pill = document.createElement("span");
+    pill.className = `status-pill status-${finding.status}`;
+    pill.textContent = statusLabel(finding.status);
+    statusCell.append(pill);
+    const amount = row.insertCell();
+    amount.className = "number";
+    amount.textContent = brl(finding.estimated_overpayment);
+  });
+  $("#emptyTable").hidden = findings.length !== 0;
+}
+
+function initEvidence() {
+  $$("[data-opinion-tab]").forEach((button, index, tabs) => {
+    button.addEventListener("click", () => {
+      Audita.opinionTab = button.dataset.opinionTab;
+      tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab === button)));
+      renderOpinion();
+    });
+    button.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      const offset = event.key === "ArrowRight" ? 1 : -1;
+      tabs[(index + offset + tabs.length) % tabs.length].focus();
+    });
+  });
+  $("#itemSearch").addEventListener("input", renderFindings);
+  $("#statusFilter").addEventListener("change", renderFindings);
 }
 
 async function loadHealth() {
@@ -200,5 +333,6 @@ function initIntake() {
 document.addEventListener("DOMContentLoaded", () => {
   if (window.lucide) window.lucide.createIcons();
   initIntake();
+  initEvidence();
   loadHealth();
 });
