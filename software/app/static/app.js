@@ -140,7 +140,7 @@ function updateFiles(fileList) {
   Audita.files = [...fileList].filter((file) => /\.(xml|zip)$/i.test(file.name));
   const badge = $("#fileBadge");
   if (!Audita.files.length) {
-    badge.textContent = "NF-e/NFC-e 4.00 · máximo 25 MB";
+    badge.textContent = "NF-e/NFC-e 4.00 · máximo 100 MB";
     return;
   }
   const bytes = Audita.files.reduce((total, file) => total + file.size, 0);
